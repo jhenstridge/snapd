@@ -656,6 +656,14 @@ slots:
     allow-installation:
       slot-snap-type:
         - core
+  xdg-desktop-portal:
+    allow-installation:
+      slot-snap-type:
+        - app
+        - core
+    deny-auto-connection: true
+    deny-connection:
+      on-classic: false
 `
 
 func init() {
