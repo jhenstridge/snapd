@@ -139,3 +139,9 @@ func (iface *XdgDesktopPortalInterface) SanitizeSlot(slot *interfaces.Slot) erro
 func (iface *XdgDesktopPortalInterface) AutoConnect(plug *interfaces.Plug, slot *interfaces.Slot) bool {
 	return true
 }
+
+
+func init() {
+	registerIface(&XdgDesktopPortalInterface{})
+}
+
