@@ -50,7 +50,13 @@ const xdgDesktopPortalConnectedSlotAppArmor = `
 # Description: allow client snaps to access the desktop portal service.
 dbus (receive, send)
     bus=session
-    interface=(org.freedesktop.DBus.Properties|org.freedesktop.portal.*)
+    interface=org.freedesktop.portal.*
+    path=/org/freedesktop/portal/{desktop,documents}
+    peer=(label=###PLUG_SECURITY_TAGS###),
+
+dbus (receive, send)
+    bus=session
+    interface=org.freedesktop.DBus.Properties
     path=/org/freedesktop/portal/{desktop,documents}
     peer=(label=###PLUG_SECURITY_TAGS###),
 `
@@ -65,7 +71,13 @@ owner /run/user/[0-9]*/doc/** rw,
 
 dbus (receive, send)
     bus=session
-    interface=(org.freedesktop.DBus.Properties|org.freedesktop.portal.*)
+    interface=org.freedesktop.portal.*
+    path=/org/freedesktop/portal/{desktop,documents}
+    peer=(label=###SLOT_SECURITY_TAGS###),
+
+dbus (receive, send)
+    bus=session
+    interface=org.freedesktop.DBus.Properties
     path=/org/freedesktop/portal/{desktop,documents}
     peer=(label=###SLOT_SECURITY_TAGS###),
 `
@@ -76,7 +88,7 @@ func (iface *XdgDesktopPortalInterface) Name() string {
 	return "xdg-desktop-portal"
 }
 
-func (iface *XdgDesktopPortalInterface) AppArmorConnectedPlug(spec *apparmor.Specification, plug *interfaces.Plug, slot *interfaces.Slot) error {
+func (iface *XdgDesktopPortalInterface) AppArmorConnectedPlug(spec *apparmor.Specification, plug *interfaces.Plug, plugAttrs map[string]interface{}, slot *interfaces.Slot, slotAttrs map[string]interface{}) error {
 	snippet := xdgDesktopPortalConnectedPlugAppArmor
 	old := "###SLOT_SECURITY_TAGS###"
 	var new string
@@ -97,7 +109,7 @@ func (iface *XdgDesktopPortalInterface) AppArmorPermanentSlot(spec *apparmor.Spe
 	return nil
 }
 
-func (iface *XdgDesktopPortalInterface) AppArmorConnectedSlot(spec *apparmor.Specification, plug *interfaces.Plug, slot *interfaces.Slot) error {
+func (iface *XdgDesktopPortalInterface) AppArmorConnectedSlot(spec *apparmor.Specification, plug *interfaces.Plug, plugAttrs map[string]interface{}, slot *interfaces.Slot, slotAttrs map[string]interface{}) error {
 	snippet := xdgDesktopPortalConnectedSlotAppArmor
 	old := "###PLUG_SNAP_NAME###"
 	new := plug.Snap.Name()
