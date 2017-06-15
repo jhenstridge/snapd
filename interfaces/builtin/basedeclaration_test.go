@@ -473,6 +473,7 @@ var (
 		"unity8-calendar":           {"app"},
 		"unity8-contacts":           {"app"},
 		"upower-observe":            {"app", "core"},
+		"xdg-desktop-portal":        {"app", "core"},
 		// snowflakes
 		"classic-support": nil,
 		"docker":          nil,

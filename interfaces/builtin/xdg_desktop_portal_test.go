@@ -89,14 +89,14 @@ func (s *XdgDesktopPortalInterfaceSuite) TestSanitizeIncorrectInterface(c *C) {
 func (s *XdgDesktopPortalInterfaceSuite) TestUsedSecuritySystems(c *C) {
 	// connected slots have a non-nil security snippet for apparmor
 	apparmorSpec := &apparmor.Specification{}
-	err := apparmorSpec.AddConnectedSlot(s.iface, s.plug, s.coreSlot)
+	err := apparmorSpec.AddConnectedSlot(s.iface, s.plug, nil, s.coreSlot, nil)
 	c.Assert(err, IsNil)
 	c.Check(apparmorSpec.SecurityTags(), DeepEquals, []string{"snap.xdg-desktop-portal.app"})
 	c.Check(apparmorSpec.SnippetForTag("snap.xdg-desktop-portal.app"), testutil.Contains, `path=/org/freedesktop/portal/{desktop,documents}`)
 
 	// slots have no permanent snippet on classic
 	apparmorSpec = &apparmor.Specification{}
-	err = apparmorSpec.AddConnectedSlot(s.iface, s.plug, s.classicSlot)
+	err = apparmorSpec.AddConnectedSlot(s.iface, s.plug, nil, s.classicSlot, nil)
 	c.Assert(err, IsNil)
 	c.Check(apparmorSpec.SecurityTags(), HasLen, 0)
 
@@ -115,14 +115,14 @@ func (s *XdgDesktopPortalInterfaceSuite) TestUsedSecuritySystems(c *C) {
 
 	// connected plugs have a non-nil security snippet for apparmor
 	apparmorSpec = &apparmor.Specification{}
-	err = apparmorSpec.AddConnectedPlug(s.iface, s.plug, s.coreSlot)
+	err = apparmorSpec.AddConnectedPlug(s.iface, s.plug, nil, s.coreSlot, nil)
 	c.Assert(err, IsNil)
 	c.Check(apparmorSpec.SecurityTags(), DeepEquals, []string{"snap.client.app"})
 	c.Check(apparmorSpec.SnippetForTag("snap.client.app"), testutil.Contains, `path=/org/freedesktop/portal/{desktop,documents}`)
 
 	// connected plugs have a bind mount of the document portal
 	mountSpec := &mount.Specification{}
-	err = mountSpec.AddConnectedPlug(s.iface, s.plug, s.classicSlot)
+	err = mountSpec.AddConnectedPlug(s.iface, s.plug, nil, s.classicSlot, nil)
 	c.Assert(err, IsNil)
 	mounts := mountSpec.MountEntries()
 	c.Assert(mounts, HasLen, 1)

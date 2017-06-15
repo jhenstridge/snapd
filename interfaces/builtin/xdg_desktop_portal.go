@@ -122,7 +122,7 @@ func (iface *XdgDesktopPortalInterface) AppArmorConnectedSlot(spec *apparmor.Spe
 	return nil
 }
 
-func (iface *XdgDesktopPortalInterface) MountConnectedPlug(spec *mount.Specification, plug *interfaces.Plug, slot *interfaces.Slot) error {
+func (iface *XdgDesktopPortalInterface) MountConnectedPlug(spec *mount.Specification, plug *interfaces.Plug, plugAttrs map[string]interface{}, slot *interfaces.Slot, slotAttrs map[string]interface{}) error {
 	appId := "snap.pkg." + plug.Snap.Name()
 	// FIXME: this needs to be per-user.  As is, it only works for the first 
 	spec.AddMountEntry(mount.Entry{
