@@ -128,7 +128,7 @@ func (iface *XdgDesktopPortalInterface) MountConnectedPlug(spec *mount.Specifica
 	spec.AddMountEntry(mount.Entry{
 		Name: "/run/user/1000/doc/by-app/" + appId,
 		Dir: "/run/user/1000/doc",
-		Options: []string{"bind"},
+		Options: []string{"bind", "rw"},
 	})
 	return nil
 }
