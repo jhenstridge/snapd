@@ -128,5 +128,5 @@ func (s *XdgDesktopPortalInterfaceSuite) TestUsedSecuritySystems(c *C) {
 	c.Assert(mounts, HasLen, 1)
 	c.Check(mounts[0].Name, Equals, "/run/user/1000/doc/by-app/snap.pkg.client")
 	c.Check(mounts[0].Dir, Equals, "/run/user/1000/doc")
-	c.Check(mounts[0].Options, DeepEquals, []string{"bind"})
+	c.Check(mounts[0].Options, DeepEquals, []string{"bind", "rw"})
 }
