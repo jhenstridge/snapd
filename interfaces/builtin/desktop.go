@@ -296,18 +296,18 @@ func (iface *desktopInterface) fontconfigDirs() []string {
 }
 
 func (iface *desktopInterface) AppArmorConnectedPlug(spec *apparmor.Specification, plug *interfaces.ConnectedPlug, slot *interfaces.ConnectedSlot) error {
-    emit := spec.AddUpdateNSf
+	emit := spec.AddUpdateNSf
 
-    if implicitSystemConnectedSlot(slot) {
-        spec.AddSnippet(desktopConnectedPlugAppArmor)
+	if implicitSystemConnectedSlot(slot) {
+		spec.AddSnippet(desktopConnectedPlugAppArmor)
 
-        // Allow mounting document portal
-        emit("  # Mount the document portal\n")
-        emit("  mount options=(bind) /run/user/[0-9]*/doc/by-app/snap.%s/ -> /run/user/[0-9]*/doc/,\n", plug.Snap().InstanceName())
-        emit("  umount /run/user/[0-9]*/doc/,\n\n")
+		// Allow mounting document portal
+		emit("  # Mount the document portal\n")
+		emit("  mount options=(bind) /run/user/[0-9]*/doc/by-app/snap.%s/ -> /run/user/[0-9]*/doc/,\n", plug.Snap().InstanceName())
+		emit("  umount /run/user/[0-9]*/doc/,\n\n")
 	}
 
-    spec.AddSnippet(desktopConnectedPlugFontsAppArmor)
+	spec.AddSnippet(desktopConnectedPlugFontsAppArmor)
 
 	// Allow mounting fonts
 	for _, dir := range iface.fontconfigDirs() {
@@ -323,13 +323,13 @@ func (iface *desktopInterface) AppArmorConnectedPlug(spec *apparmor.Specificatio
 }
 
 func (iface *desktopInterface) MountConnectedPlug(spec *mount.Specification, plug *interfaces.ConnectedPlug, slot *interfaces.ConnectedSlot) error {
-    if implicitSystemConnectedSlot(slot) {
-        	appId := "snap." + plug.Snap().InstanceName()
-        spec.AddUserMountEntry(osutil.MountEntry{
-            Name:    "$XDG_RUNTIME_DIR/doc/by-app/" + appId,
-            Dir:     "$XDG_RUNTIME_DIR/doc",
-            Options: []string{"bind", "rw", osutil.XSnapdIgnoreMissing()},
-        })
+	if implicitSystemConnectedSlot(slot) {
+		appId := "snap." + plug.Snap().InstanceName()
+		spec.AddUserMountEntry(osutil.MountEntry{
+			Name:    "$XDG_RUNTIME_DIR/doc/by-app/" + appId,
+			Dir:     "$XDG_RUNTIME_DIR/doc",
+			Options: []string{"bind", "rw", osutil.XSnapdIgnoreMissing()},
+		})
 	}
 
 	for _, dir := range iface.fontconfigDirs() {
