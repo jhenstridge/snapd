@@ -1532,13 +1532,13 @@ volumes:
 	c.Assert(err, IsNil)
 
 	_, err = gadget.ReadInfo(s.dir, nil)
-	c.Check(err, ErrorMatches, `invalid volume "pc": structure #1 \("other-name"\) refers to an unknown structure "bad-name"`)
+	c.Check(err, ErrorMatches, `invalid volume "pc": structure "other-name" refers to an unknown structure "bad-name"`)
 
 	err = ioutil.WriteFile(s.gadgetYamlPath, []byte(gadgetYamlBadContentName), 0644)
 	c.Assert(err, IsNil)
 
 	_, err = gadget.ReadInfo(s.dir, nil)
-	c.Check(err, ErrorMatches, `invalid volume "pc": structure #1 \("other-name"\), content #0 \("pc-core.img"\) refers to an unknown structure "bad-name"`)
+	c.Check(err, ErrorMatches, `invalid volume "pc": structure "other-name", content #0 \("pc-core.img"\) refers to an unknown structure "bad-name"`)
 
 }
 
@@ -1636,7 +1636,7 @@ volumes:
 	c.Assert(err, IsNil)
 
 	_, err = gadget.ReadInfo(s.dir, nil)
-	c.Check(err, ErrorMatches, `invalid volume "pc": structure #1 \("other-name"\) overlaps with the preceding structure #0 \("mbr"\)`)
+	c.Check(err, ErrorMatches, `invalid volume "pc": structure "other-name" overlaps with the preceding structure "mbr"`)
 }
 
 func (s *gadgetYamlTestSuite) TestValidateLayoutOverlapOutOfOrder(c *C) {
@@ -1661,7 +1661,7 @@ volumes:
 	c.Assert(err, IsNil)
 
 	_, err = gadget.ReadInfo(s.dir, nil)
-	c.Check(err, ErrorMatches, `invalid volume "pc": structure #0 \("overlaps-with-foo"\) overlaps with the preceding structure #1 \("foo"\)`)
+	c.Check(err, ErrorMatches, `invalid volume "pc": structure "overlaps-with-foo" overlaps with the preceding structure "foo"`)
 }
 
 func (s *gadgetYamlTestSuite) TestValidateCrossStructureMBRFixedOffset(c *C) {
@@ -1712,7 +1712,7 @@ volumes:
 	c.Assert(err, IsNil)
 
 	_, err = gadget.ReadInfo(s.dir, nil)
-	c.Check(err, ErrorMatches, `invalid volume "pc": structure #1 \("mbr"\) has "mbr" role and must start at offset 0`)
+	c.Check(err, ErrorMatches, `invalid volume "pc": structure "mbr" has "mbr" role and must start at offset 0`)
 }
 
 func (s *gadgetYamlTestSuite) TestReadInfoAndValidateConsistencyWithoutModelCharacteristics(c *C) {
@@ -2660,14 +2660,10 @@ var mockDeviceLayout = gadget.OnDiskVolume{
 		// as existing on the disk - the code and test accounts for the MBR
 		// structure not being present in the OnDiskVolume
 		{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					Name: "BIOS Boot",
-					Size: 1 * quantity.SizeMiB,
-				},
-				StartOffset: 1 * quantity.OffsetMiB,
-			},
-			Node: "/dev/node1",
+			Node:        "/dev/node1",
+			Name:        "BIOS Boot",
+			Size:        1 * quantity.SizeMiB,
+			StartOffset: 1 * quantity.OffsetMiB,
 		},
 	},
 	ID:         "anything",
@@ -2736,7 +2732,7 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibilityMBRStructureAllowedMissingW
 
 	// ensure the first structure is the MBR in the YAML, but the first
 	// structure in the device layout is BIOS Boot
-	c.Assert(gadgetLayout.LaidOutStructure[0].Role, Equals, "mbr")
+	c.Assert(gadgetLayout.LaidOutStructure[0].Role(), Equals, "mbr")
 	c.Assert(mockDeviceLayout.Structure[0].Name, Equals, "BIOS Boot")
 
 	err = gadget.EnsureLayoutCompatibility(gadgetLayout, &mockDeviceLayout, nil)
@@ -2774,15 +2770,11 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibilityTypeBareStructureAllowedMis
 			// as existing on the disk - the code and test accounts for the MBR
 			// structure not being present in the OnDiskVolume
 			{
-				LaidOutStructure: gadget.LaidOutStructure{
-					VolumeStructure: &gadget.VolumeStructure{
-						Name:       "some-filesystem",
-						Size:       1 * quantity.SizeGiB,
-						Filesystem: "ext4",
-					},
-					StartOffset: 1*quantity.OffsetMiB + 4096,
-				},
-				Node: "/dev/node1",
+				Node:            "/dev/node1",
+				Name:            "some-filesystem",
+				Size:            1 * quantity.SizeGiB,
+				PartitionFSType: "ext4",
+				StartOffset:     1*quantity.OffsetMiB + 4096,
 			},
 		},
 		ID:         "anything",
@@ -2801,7 +2793,7 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibilityTypeBareStructureAllowedMis
 
 	// ensure the first structure is barething in the YAML, but the first
 	// structure in the device layout is some-filesystem
-	c.Assert(gadgetLayout.LaidOutStructure[0].Type, Equals, "bare")
+	c.Assert(gadgetLayout.LaidOutStructure[0].Type(), Equals, "bare")
 	c.Assert(simpleDeviceLayout.Structure[0].Name, Equals, "some-filesystem")
 
 	err = gadget.EnsureLayoutCompatibility(gadgetLayout, &simpleDeviceLayout, nil)
@@ -2849,15 +2841,11 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibility(c *C) {
 	deviceLayoutWithExtras := mockDeviceLayout
 	deviceLayoutWithExtras.Structure = append(deviceLayoutWithExtras.Structure,
 		gadget.OnDiskStructure{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					Name:  "Extra partition",
-					Size:  10 * quantity.SizeMiB,
-					Label: "extra",
-				},
-				StartOffset: 2 * quantity.OffsetMiB,
-			},
-			Node: "/dev/node2",
+			Node:             "/dev/node2",
+			Name:             "Extra partition",
+			Size:             10 * quantity.SizeMiB,
+			PartitionFSLabel: "extra",
+			StartOffset:      2 * quantity.OffsetMiB,
 		},
 	)
 	// extra structure (should fail)
@@ -2892,28 +2880,20 @@ func (s *gadgetYamlTestSuite) TestMBRLayoutCompatibility(c *C) {
 	var mockMBRDeviceLayout = gadget.OnDiskVolume{
 		Structure: []gadget.OnDiskStructure{
 			{
-				LaidOutStructure: gadget.LaidOutStructure{
-					VolumeStructure: &gadget.VolumeStructure{
-						// partition names have no
-						// meaning in MBR schema
-						Name: "other",
-						Size: 440,
-					},
-					StartOffset: 0,
-				},
 				Node: "/dev/node1",
+				// partition names have no
+				// meaning in MBR schema
+				Name:        "other",
+				Size:        440,
+				StartOffset: 0,
 			},
 			{
-				LaidOutStructure: gadget.LaidOutStructure{
-					VolumeStructure: &gadget.VolumeStructure{
-						// partition names have no
-						// meaning in MBR schema
-						Name: "different BIOS Boot",
-						Size: 1 * quantity.SizeMiB,
-					},
-					StartOffset: 1 * quantity.OffsetMiB,
-				},
 				Node: "/dev/node2",
+				// partition names have no
+				// meaning in MBR schema
+				Name:        "different BIOS Boot",
+				Size:        1 * quantity.SizeMiB,
+				StartOffset: 1 * quantity.OffsetMiB,
 			},
 		},
 		ID:               "anything",
@@ -2936,18 +2916,14 @@ func (s *gadgetYamlTestSuite) TestMBRLayoutCompatibility(c *C) {
 	deviceLayoutWithExtras := mockMBRDeviceLayout
 	deviceLayoutWithExtras.Structure = append(deviceLayoutWithExtras.Structure,
 		gadget.OnDiskStructure{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					// name is ignored with MBR schema
-					Name:       "Extra partition",
-					Size:       1200 * quantity.SizeMiB,
-					Label:      "extra",
-					Filesystem: "ext4",
-					Type:       "83",
-				},
-				StartOffset: 2 * quantity.OffsetMiB,
-			},
 			Node: "/dev/node2",
+			// name is ignored with MBR schema
+			Name:             "Extra partition",
+			Size:             1200 * quantity.SizeMiB,
+			PartitionFSLabel: "extra",
+			PartitionFSType:  "ext4",
+			Type:             "83",
+			StartOffset:      2 * quantity.OffsetMiB,
 		},
 	)
 	err = gadget.EnsureLayoutCompatibility(gadgetLayoutWithExtras, &deviceLayoutWithExtras, nil)
@@ -2968,15 +2944,11 @@ func (s *gadgetYamlTestSuite) TestMBRLayoutCompatibility(c *C) {
 	// add another structure that's not part of the gadget
 	deviceLayoutWithExtras.Structure = append(deviceLayoutWithExtras.Structure,
 		gadget.OnDiskStructure{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					// name is ignored with MBR schema
-					Name: "Extra extra partition",
-					Size: 1 * quantity.SizeMiB,
-				},
-				StartOffset: 1202 * quantity.OffsetMiB,
-			},
 			Node: "/dev/node4",
+			// name is ignored with MBR schema
+			Name:        "Extra extra partition",
+			Size:        1 * quantity.SizeMiB,
+			StartOffset: 1202 * quantity.OffsetMiB,
 		},
 	)
 	err = gadget.EnsureLayoutCompatibility(gadgetLayoutWithExtras, &deviceLayoutWithExtras, nil)
@@ -2991,16 +2963,12 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibilityWithCreatedPartitions(c *C)
 	// device matches gadget except for the filesystem type
 	deviceLayout.Structure = append(deviceLayout.Structure,
 		gadget.OnDiskStructure{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					Name:       "Writable",
-					Size:       1200 * quantity.SizeMiB,
-					Label:      "writable",
-					Filesystem: "something_else",
-				},
-				StartOffset: 2 * quantity.OffsetMiB,
-			},
-			Node: "/dev/node2",
+			Node:             "/dev/node2",
+			Name:             "Writable",
+			Size:             1200 * quantity.SizeMiB,
+			PartitionFSLabel: "writable",
+			PartitionFSType:  "something_else",
+			StartOffset:      2 * quantity.OffsetMiB,
 		},
 	)
 
@@ -3071,16 +3039,12 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibilityWithUnspecifiedGadgetFilesy
 	// device matches, but it has a filesystem
 	deviceLayout.Structure = append(deviceLayout.Structure,
 		gadget.OnDiskStructure{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					Name:       "foobar",
-					Size:       1200 * quantity.SizeMiB,
-					Label:      "whatever",
-					Filesystem: "something",
-				},
-				StartOffset: 2 * quantity.OffsetMiB,
-			},
-			Node: "/dev/node2",
+			Node:             "/dev/node2",
+			Name:             "foobar",
+			Size:             1200 * quantity.SizeMiB,
+			PartitionFSLabel: "whatever",
+			PartitionFSType:  "something",
+			StartOffset:      2 * quantity.OffsetMiB,
 		},
 	)
 
@@ -3119,26 +3083,18 @@ var mockEncDeviceLayout = gadget.OnDiskVolume{
 		// as existing on the disk - the code and test accounts for the MBR
 		// structure not being present in the OnDiskVolume
 		{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					Name: "BIOS Boot",
-					Size: 1 * quantity.SizeMiB,
-				},
-				StartOffset: 1 * quantity.OffsetMiB,
-			},
-			Node: "/dev/node1",
+			Node:        "/dev/node1",
+			Name:        "BIOS Boot",
+			Size:        1 * quantity.SizeMiB,
+			StartOffset: 1 * quantity.OffsetMiB,
 		},
 		{
-			LaidOutStructure: gadget.LaidOutStructure{
-				VolumeStructure: &gadget.VolumeStructure{
-					Name:       "Writable",
-					Size:       1200 * quantity.SizeMiB,
-					Filesystem: "crypto_LUKS",
-					Label:      "Writable-enc",
-				},
-				StartOffset: 2 * quantity.OffsetMiB,
-			},
-			Node: "/dev/node2",
+			Node:             "/dev/node2",
+			Name:             "Writable",
+			Size:             1200 * quantity.SizeMiB,
+			PartitionFSType:  "crypto_LUKS",
+			PartitionFSLabel: "Writable-enc",
+			StartOffset:      2 * quantity.OffsetMiB,
 		},
 	},
 	ID:         "anything",
@@ -3184,17 +3140,17 @@ func (s *gadgetYamlTestSuite) TestLayoutCompatibilityWithLUKSEncryptedPartitions
 
 	// but if the name of the partition does not match "-enc" then it is not
 	// valid
-	deviceLayout.Structure[1].Label = "Writable"
+	deviceLayout.Structure[1].PartitionFSLabel = "Writable"
 	err = gadget.EnsureLayoutCompatibility(gadgetLayout, &deviceLayout, encOpts)
 	c.Assert(err, ErrorMatches, `cannot find disk partition /dev/node2 \(starting at 2097152\) in gadget: partition Writable is expected to be encrypted but is not named Writable-enc`)
 
 	// the filesystem must also be reported as crypto_LUKS
-	deviceLayout.Structure[1].Label = "Writable-enc"
-	deviceLayout.Structure[1].Filesystem = "ext4"
+	deviceLayout.Structure[1].PartitionFSLabel = "Writable-enc"
+	deviceLayout.Structure[1].PartitionFSType = "ext4"
 	err = gadget.EnsureLayoutCompatibility(gadgetLayout, &deviceLayout, encOpts)
 	c.Assert(err, ErrorMatches, `cannot find disk partition /dev/node2 \(starting at 2097152\) in gadget: partition Writable is expected to be encrypted but does not have an encrypted filesystem`)
 
-	deviceLayout.Structure[1].Filesystem = "crypto_LUKS"
+	deviceLayout.Structure[1].PartitionFSType = "crypto_LUKS"
 
 	// but without encrypted partition information and strict assumptions, they
 	// do not match due to differing filesystems
@@ -3414,10 +3370,10 @@ func (s *gadgetYamlTestSuite) TestOnDiskStructureIsLikelyImplicitSystemDataRoleU
 	deviceLayout.Structure[2].Size = oldSize
 
 	// if we make system-data not ext4 then it is not
-	deviceLayout.Structure[2].Filesystem = "zfs"
+	deviceLayout.Structure[2].PartitionFSType = "zfs"
 	matches = gadget.OnDiskStructureIsLikelyImplicitSystemDataRole(gadgetLayout, &deviceLayout, deviceLayout.Structure[2])
 	c.Assert(matches, Equals, false)
-	deviceLayout.Structure[2].Filesystem = "ext4"
+	deviceLayout.Structure[2].PartitionFSType = "ext4"
 
 	// if we make the partition type not "Linux filesystem data", then it is not
 	deviceLayout.Structure[2].Type = "foo"
@@ -3426,10 +3382,10 @@ func (s *gadgetYamlTestSuite) TestOnDiskStructureIsLikelyImplicitSystemDataRoleU
 	deviceLayout.Structure[2].Type = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
 
 	// if we make the Label not writable, then it is not
-	deviceLayout.Structure[2].Label = "foo"
+	deviceLayout.Structure[2].PartitionFSLabel = "foo"
 	matches = gadget.OnDiskStructureIsLikelyImplicitSystemDataRole(gadgetLayout, &deviceLayout, deviceLayout.Structure[2])
 	c.Assert(matches, Equals, false)
-	deviceLayout.Structure[2].Label = "writable"
+	deviceLayout.Structure[2].PartitionFSLabel = "writable"
 
 	// if we add another LaidOutStructure Partition to the YAML so that there is
 	// not exactly one extra partition on disk compated to the YAML, then it is
@@ -3789,7 +3745,38 @@ func (s *gadgetYamlTestSuite) TestLaidOutVolumesFromClassicWithModesGadgetHappy(
 	c.Assert(all["pc"], DeepEquals, systemLv)
 	c.Assert(systemLv.Volume.Bootloader, Equals, "grub")
 	c.Assert(systemLv.LaidOutStructure, HasLen, 6)
-	// There is no implicit fs label for system-seed-null role
 	c.Assert(systemLv.Structure[2].Role, Equals, gadget.SystemSeedNull)
-	c.Assert(systemLv.Structure[2].Label, Equals, "")
+	c.Assert(systemLv.Structure[2].Label, Equals, "ubuntu-seed")
+}
+
+func (s *gadgetYamlTestSuite) TestHasRole(c *C) {
+	tests := []struct {
+		yaml  []byte
+		roles []string
+		found string
+	}{
+		{yaml: gadgetYamlUC20PC, roles: []string{gadget.SystemData}, found: gadget.SystemData},
+		{yaml: gadgetYamlUC20PC, roles: []string{"system-other"}, found: ""},
+		{yaml: gadgetYamlUC20PC, roles: []string{gadget.SystemSeed, gadget.SystemSeedNull}, found: gadget.SystemSeed},
+		{yaml: gadgetYamlClassicWithModes, roles: []string{gadget.SystemSeed, gadget.SystemSeedNull}, found: gadget.SystemSeedNull},
+	}
+
+	for _, t := range tests {
+		err := ioutil.WriteFile(s.gadgetYamlPath, t.yaml, 0644)
+		c.Assert(err, IsNil)
+
+		found, err := gadget.HasRole(s.dir, t.roles)
+		c.Assert(err, IsNil)
+		c.Check(found, Equals, t.found)
+	}
+}
+
+func (s *gadgetYamlTestSuite) TestHasRoleUnhappy(c *C) {
+	_, err := gadget.HasRole("bogus-path", []string{gadget.SystemData})
+	c.Check(err, ErrorMatches, `.*meta/gadget.yaml: no such file or directory`)
+
+	err = ioutil.WriteFile(s.gadgetYamlPath, []byte(`{`), 0644)
+	c.Assert(err, IsNil)
+	_, err = gadget.HasRole(s.dir, []string{gadget.SystemData})
+	c.Check(err, ErrorMatches, `cannot minimally parse gadget metadata: yaml:.*`)
 }
