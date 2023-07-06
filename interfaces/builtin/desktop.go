@@ -335,6 +335,11 @@ dbus (receive, send)
     path=/org/freedesktop/portal/desktop{,/**}
     interface=org.freedesktop.DBus.Properties
     peer=(label=unconfined),
+dbus (send)
+    bus=session
+    interface=org.freedesktop.portal.*
+    path=/org/freedesktop/portal/desktop{,/**}
+    peer=(label=unconfined),
 `
 
 type desktopInterface struct {
